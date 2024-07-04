@@ -44,6 +44,11 @@ class _QuizPageState extends State<QuizPage> {
     );
   }
 
+  Future<void> updateWordCorrectness(String wordId, bool isCorrect) async {
+    final correctDate = isCorrect ? Timestamp.now() : null;
+    await collection.doc(wordId).update({'correctDate': correctDate});
+  }
+
   Widget _buildQuiz() {
     return Card(
       // elevationで影の設定 (Material3ではelevationは非推奨)
@@ -136,21 +141,20 @@ class _QuizPageState extends State<QuizPage> {
   }
 
   Future<void> _checkAnswer(Quiz quiz) async {
+    final currentQuiz = widget.quizList[_currentQuizIndex];
+
     setState(() {
       // showResultをtrueにして結果を表示
       _showResult = true;
       // 回答が正解かどうかを判定 (完全一致)
-      _isCorrect =
-          _answerController.text == widget.quizList[_currentQuizIndex].answer;
+      _isCorrect = _answerController.text == currentQuiz.answer;
     });
 
     if (_isCorrect) {
       _score++;
-      final wordId = widget.quizList[_currentQuizIndex].wordId;
-      await collection.doc(wordId).update({
-        'correctDate': Timestamp.now(),
-      });
     }
+
+    await updateWordCorrectness(currentQuiz.wordId, _isCorrect);
   }
 
   void _nextQuiz() {
