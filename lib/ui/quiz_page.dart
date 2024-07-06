@@ -1,6 +1,6 @@
-import 'package:english_vocab_quiz_app/quiz_result_page.dart';
 import 'package:flutter/material.dart';
-import 'entities/quiz.dart';
+import 'quiz_result_page.dart';
+import '../entities/quiz.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 

@@ -1,12 +1,12 @@
-import 'package:english_vocab_quiz_app/word_registration_page.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
-import 'entities/word.dart';
-import 'entities/quiz.dart';
+import '../firebase_options.dart';
+import '../entities/word.dart';
+import '../entities/quiz.dart';
 import 'quiz_page.dart';
 import 'word_update_page.dart';
+import 'word_registration_page.dart';
 
 const collectionKey = 'words';
 

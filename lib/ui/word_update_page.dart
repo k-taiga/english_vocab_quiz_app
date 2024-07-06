@@ -1,35 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'firebase_options.dart';
-import 'entities/word.dart';
-import 'exceptions/word_validation_exception.dart';
+import '../firebase_options.dart';
+import '../entities/word.dart';
+import '../exceptions/word_validation_exception.dart';
 
-class WordRegistrationPage extends StatefulWidget {
-  const WordRegistrationPage({super.key});
+const collectionKey = 'words';
+
+class WordUpdatePage extends StatefulWidget {
+  const WordUpdatePage({super.key, required this.word});
+  final Word word;
 
   @override
-  State<WordRegistrationPage> createState() => _WordRegistrationPageState();
+  State<WordUpdatePage> createState() => _WordUpdatePageState();
 }
 
-class _WordRegistrationPageState extends State<WordRegistrationPage> {
+class _WordUpdatePageState extends State<WordUpdatePage> {
   late FirebaseFirestore firestore;
   late CollectionReference<Map<String, dynamic>> collection;
-  String _englishWord = '';
-  String _japaneseWord = '';
+  late TextEditingController _englishController;
+  late TextEditingController _japaneseController;
 
   @override
   void initState() {
     super.initState();
     firestore = FirebaseFirestore.instance;
-    collection = firestore.collection('words');
+    collection = firestore.collection(collectionKey);
+    _englishController = TextEditingController(text: widget.word.english);
+    _japaneseController = TextEditingController(text: widget.word.japanese);
   }
 
-  Future<void> save(Word word) async {
-    await collection.doc(word.id).set({
+  Future<void> update(Word word) async {
+    await collection.doc(word.id).update({
       'english': word.english,
       'japanese': word.japanese,
-      'createdDate': word.createdDate,
     });
   }
 
@@ -52,12 +56,19 @@ class _WordRegistrationPageState extends State<WordRegistrationPage> {
   }
 
   @override
+  void dispose() {
+    _englishController.dispose();
+    _japaneseController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
         backgroundColor: Colors.blue,
-        title: const Text('単語登録', style: TextStyle(color: Colors.white)),
+        title: const Text('単語更新', style: TextStyle(color: Colors.white)),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -75,27 +86,23 @@ class _WordRegistrationPageState extends State<WordRegistrationPage> {
                   child: Column(
                     children: [
                       TextField(
+                        controller: _englishController,
                         decoration: const InputDecoration(
                           labelText: '英語',
                           hintText: 'apple',
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.language),
                         ),
-                        onChanged: (text) {
-                          _englishWord = text;
-                        },
                       ),
                       const SizedBox(height: 16),
                       TextField(
+                        controller: _japaneseController,
                         decoration: const InputDecoration(
                           labelText: '日本語',
                           hintText: 'りんご',
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.translate),
                         ),
-                        onChanged: (text) {
-                          _japaneseWord = text;
-                        },
                       ),
                     ],
                   ),
@@ -103,40 +110,39 @@ class _WordRegistrationPageState extends State<WordRegistrationPage> {
               ),
               const SizedBox(height: 24),
               ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.blue,
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blue,
+                    padding: EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
-                ),
-                child: const Text(
-                  '登録する',
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white),
-                ),
-                onPressed: () {
-                  try {
-                    final word = Word.create(
-                      id: DateTime.now().millisecondsSinceEpoch.toString(),
-                      english: _englishWord,
-                      japanese: _japaneseWord,
-                      createdDate: DateTime.now(),
-                    );
-
-                    save(word).then((_) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('単語を登録しました')),
+                  child: const Text(
+                    '更新する',
+                    style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
+                  ),
+                  onPressed: () {
+                    try {
+                      final updatedWord = Word.create(
+                        id: widget.word.id,
+                        english: _englishController.text,
+                        japanese: _japaneseController.text,
+                        createdDate: widget.word.createdDate,
                       );
-                      Navigator.pop(context);
-                    });
-                  } on WordValidationException catch (e) {
-                    showErrorDialog(context, e.message);
-                  }
-                },
-              ),
+
+                      update(updatedWord).then((_) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('単語を更新しました')),
+                        );
+                        Navigator.pop(context);
+                      });
+                    } on WordValidationException catch (e) {
+                      showErrorDialog(context, e.message);
+                    }
+                  }),
             ],
           ),
         ),
